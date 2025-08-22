@@ -1,6 +1,8 @@
 const SIZE = 8;
+const HUMAN = 1;
+const COMPUTER = 2;
 let board = [];
-let currentPlayer = 1; // 1: black, 2: white
+let currentPlayer = HUMAN; // 1: black (human), 2: white (computer)
 const boardElem = document.getElementById('board');
 const statusElem = document.getElementById('status');
 const directions = [
@@ -15,7 +17,7 @@ function init() {
   board[3][4] = 1;
   board[4][3] = 1;
   board[4][4] = 2;
-  currentPlayer = 1;
+  currentPlayer = HUMAN;
   render();
   updateStatus();
 }
@@ -30,7 +32,7 @@ function render() {
       cell.dataset.col = c;
       if (board[r][c] !== 0) {
         const disc = document.createElement('div');
-        disc.className = 'disc ' + (board[r][c] === 1 ? 'black' : 'white');
+        disc.className = 'disc ' + (board[r][c] === HUMAN ? 'black' : 'white');
         cell.appendChild(disc);
       }
       cell.addEventListener('click', onCellClick);
@@ -40,8 +42,13 @@ function render() {
 }
 
 function onCellClick(e) {
+  if (currentPlayer !== HUMAN) return;
   const r = Number(e.currentTarget.dataset.row);
   const c = Number(e.currentTarget.dataset.col);
+  makeMove(r, c);
+}
+
+function makeMove(r, c) {
   const flips = getFlips(r, c, currentPlayer);
   if (board[r][c] === 0 && flips.length > 0) {
     board[r][c] = currentPlayer;
@@ -55,8 +62,23 @@ function onCellClick(e) {
     } else {
       render();
       updateStatus();
+      if (currentPlayer === COMPUTER) setTimeout(computerMove, 500);
     }
   }
+}
+
+function computerMove() {
+  if (currentPlayer !== COMPUTER) return;
+  const moves = [];
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const flips = getFlips(r, c, COMPUTER);
+      if (flips.length > 0) moves.push({ r, c });
+    }
+  }
+  if (moves.length === 0) return;
+  const move = moves[Math.floor(Math.random() * moves.length)];
+  makeMove(move.r, move.c);
 }
 
 function getFlips(r, c, player) {
@@ -104,7 +126,7 @@ function updateStatus() {
       if (board[r][c]) count[board[r][c]]++;
     }
   }
-  const playerText = currentPlayer === 1 ? '黒' : '白';
+  const playerText = currentPlayer === HUMAN ? '黒(あなた)' : '白(コンピュータ)';
   statusElem.textContent = `黒: ${count[1]} 白: ${count[2]} 現在の手番: ${playerText}`;
 }
 
